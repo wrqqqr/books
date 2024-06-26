@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import axios from "axios";
 import {
-  TextField,
+  CircularProgress,
   InputBase,
   Toolbar,
   Box,
@@ -19,74 +19,16 @@ import {
 import { styled, alpha } from "@mui/material/styles";
 import SearchIcon from "@mui/icons-material/Search";
 import debounce from "lodash.debounce";
+import SearchBar from "@/app/ui/SearchBar/SearchBar";
 
-const defaultImage = "./default-image.jpg";
-
-const Search = styled("div")(({ theme }) => ({
-  position: "relative",
-  borderRadius: theme.shape.borderRadius,
-  backgroundColor: alpha(theme.palette.common.white, 0.15),
-  "&:hover": {
-    backgroundColor: alpha(theme.palette.common.white, 0.25),
-  },
-  marginLeft: 0,
-  width: "100%",
-  [theme.breakpoints.up("sm")]: {
-    marginLeft: theme.spacing(1),
-    width: "auto",
-  },
-}));
-
-const SearchIconWrapper = styled("div")(({ theme }) => ({
-  padding: theme.spacing(0, 2),
-  height: "100%",
-  position: "absolute",
-  pointerEvents: "none",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-}));
-
-const StyledInputBase = styled(InputBase)(({ theme }) => ({
-  color: "inherit",
-  width: "100%",
-  "& .MuiInputBase-input": {
-    padding: theme.spacing(1, 1, 1, 0),
-    // vertical padding + font size from searchIcon
-    paddingLeft: `calc(1em + ${theme.spacing(4)})`,
-    transition: theme.transitions.create("width"),
-    [theme.breakpoints.up("sm")]: {
-      width: "12ch",
-      "&:focus": {
-        width: "20ch",
-      },
-    },
-  },
-}));
+const defaultImage = "/images/default-image.png";
 
 export default function SearchAppBar() {
   const [query, setQuery] = useState("Lovecraft");
   const [books, setBooks] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-
-  const fetchBooks = useCallback(async (query: string, startIndex = 0) => {
-    if (query.length === 0) {
-      setBooks([]);
-      return;
-    }
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY;
-    let response = null;
-    try {
-      response = await axios.get(
-        `https://www.googleapis.com/books/v1/volumes?q=${query}&startIndex=${startIndex}&maxResults=6&key=${apiKey}`,
-      );
-    } catch (error) {
-      console.error("Ошибка при запросе книг:", error);
-    }
-    setBooks(response?.data.items || []);
-    setTotalPages(Math.ceil(response?.data.totalItems / 12));
-  }, []);
+  const [isLoading, setIsLoading] = useState(false);
 
   const debouncedFetchBooks = useCallback(
     debounce((q) => fetchBooks(q), 500),
@@ -114,76 +56,72 @@ export default function SearchAppBar() {
           >
             Books search
           </Typography>
-          <Search>
-            <SearchIconWrapper>
-              <SearchIcon />
-            </SearchIconWrapper>
-            <StyledInputBase
-              placeholder="Search…"
-              inputProps={{ "aria-label": "search" }}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-          </Search>
+          <SearchBar onSearch={fetchBooks} />
         </Toolbar>
       </AppBar>
-      <Grid container spacing={2} marginTop={2}>
-        {books.map((book) => {
-          const { title, authors, description, imageLinks } = book.volumeInfo;
-          return (
-            <Grid item xs={12} sm={6} md={4} key={book.id}>
-              <Card>
-                {imageLinks && imageLinks.thumbnail && (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      height: 200,
-                      overflow: "hidden",
-                    }}
-                  >
-                    <CardMedia
-                      component="img"
+      {isLoading ? (
+        <Box display="flex" justifyContent="center" marginTop={2}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <Grid container spacing={2} marginTop={2}>
+          {books.map((book) => {
+            const { title, authors, description, imageLinks } = book.volumeInfo;
+            const imageUrl =
+              imageLinks && imageLinks.thumbnail
+                ? imageLinks.thumbnail
+                : defaultImage;
+            return (
+              <Grid item xs={12} sm={6} md={4} key={book.id}>
+                <Card>
+                  {imageLinks && imageLinks.thumbnail && (
+                    <Box
                       sx={{
-                        height: "100%",
-                        width: "auto",
-                        objectFit: "contain",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        height: 200,
+                        overflow: "hidden",
                       }}
-                      alt={title}
-                      image={imageLinks?.thumbnail || defaultImage}
-                      title={title}
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = defaultImage;
-                      }}
-                    />
-                  </Box>
-                )}
-                <CardContent>
-                  <Typography variant="h6" component="div">
-                    {title}
-                  </Typography>
-                  <Typography
-                    variant="subtitle1"
-                    color="textSecondary"
-                    component="div"
-                  >
-                    {authors?.join(", ")}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    color="textSecondary"
-                    component="p"
-                  >
-                    {description?.substring(0, 100)}...
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          );
-        })}
-      </Grid>
+                    >
+                      <CardMedia
+                        component="img"
+                        sx={{
+                          height: "100%",
+                          width: "auto",
+                          objectFit: "contain",
+                        }}
+                        alt={title}
+                        image={imageUrl}
+                        title={title}
+                      />
+                    </Box>
+                  )}
+                  <CardContent>
+                    <Typography variant="h6" component="div">
+                      {title}
+                    </Typography>
+                    <Typography
+                      variant="subtitle1"
+                      color="textSecondary"
+                      component="div"
+                    >
+                      {authors?.join(", ")}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="textSecondary"
+                      component="p"
+                    >
+                      {description?.substring(0, 100)}...
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            );
+          })}
+        </Grid>
+      )}
       {totalPages > 1 && (
         <Box display="flex" justifyContent="center" marginTop={2}>
           <Pagination
