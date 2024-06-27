@@ -1,7 +1,13 @@
 "use client";
 
-import React from "react";
-import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
+import React, { ReactNode } from "react";
+import {
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  SelectChangeEvent,
+} from "@mui/material";
 
 const genres = [
   "Fiction",
@@ -25,7 +31,7 @@ const GenreSelect: React.FC<GenreSelectProps> = ({
   selectedGenre,
   setSelectedGenre,
 }) => {
-  const handleChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+  const handleChange = (event: SelectChangeEvent<string>, child: ReactNode) => {
     setSelectedGenre(event.target.value as string);
   };
 
