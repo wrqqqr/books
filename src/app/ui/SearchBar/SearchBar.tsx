@@ -7,7 +7,7 @@ import SearchIcon from "@mui/icons-material/Search";
 
 interface SearchBarProps {
   query: string;
-  setQuery: React.Dispatch<React.SetStateAction<string>>;
+  setQuery: (query: string) => void;
 }
 
 const Search = styled("div")(({ theme }) => ({

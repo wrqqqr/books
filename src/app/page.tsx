@@ -39,7 +39,7 @@ const HomePage: React.FC = observer(() => {
       />
       <SearchBar
         query={bookStore.query}
-        setQuery={(query) => bookStore.setQuery(query)}
+        setQuery={(query: string) => bookStore.setQuery(query)}
       />
       {bookStore.loading ? (
         <Box

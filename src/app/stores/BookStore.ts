@@ -15,7 +15,6 @@ class BookStore {
     makeAutoObservable(this);
     this.fetchBooks();
   }
-
   setQuery(query: string) {
     this.query = query;
     this.currentPage = 1;
