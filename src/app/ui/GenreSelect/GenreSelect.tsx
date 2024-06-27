@@ -1,4 +1,3 @@
-// components/ui/GenreSelect/GenreSelect.tsx
 "use client";
 
 import React from "react";

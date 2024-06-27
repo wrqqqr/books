@@ -1,4 +1,3 @@
-// stores/BookStore.ts
 import { makeAutoObservable, runInAction } from "mobx";
 import { fetchBooks } from "@/app/lib/api/fetchBooks";
 import { Book } from "@/app/types";

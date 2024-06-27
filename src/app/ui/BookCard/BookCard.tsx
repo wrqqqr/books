@@ -23,7 +23,7 @@ const BookCard: React.FC<BookCardProps> = ({
       : description;
 
   return (
-    <Card sx={{ display: "flex", flexDirection: "column" }}>
+    <Card sx={{ display: "flex", flexDirection: "column", height: "800px" }}>
       <CardMedia
         component="img"
         sx={{ width: "auto" }}

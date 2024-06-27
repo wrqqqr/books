@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Grid } from "@mui/material";
+import { Grid, Box, Typography } from "@mui/material";
 import BookCard from "../BookCard/BookCard";
 import { Book } from "@/app/types";
 
@@ -11,6 +11,18 @@ interface BooksGridProps {
 }
 
 const BooksGrid: React.FC<BooksGridProps> = ({ books }) => {
+  if (books.length === 0) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="50vh"
+      >
+        <Typography variant="h6">No results found</Typography>
+      </Box>
+    );
+  }
   return (
     <Grid container spacing={2} marginTop={2}>
       {books?.map((book) => {

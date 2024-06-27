@@ -9,7 +9,6 @@ import { Container, Typography, Box, Link } from "@mui/material";
 const BookPage = () => {
   const { bookId } = useParams();
   const [book, setBook] = useState(null);
-  console.log(bookId);
   useEffect(() => {
     if (bookId) {
       const fetchBook = async () => {
