@@ -1,9 +1,14 @@
 "use client";
 
-import React from "react";
+import React, { ChangeEvent } from "react";
 import { AppBar, Toolbar, Typography, InputBase } from "@mui/material";
 import { styled, alpha } from "@mui/material/styles";
 import SearchIcon from "@mui/icons-material/Search";
+
+interface SearchBarProps {
+  query: string;
+  setQuery: React.Dispatch<React.SetStateAction<string>>;
+}
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -46,7 +51,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   },
 }));
 
-const SearchBar = ({ query, setQuery }) => (
+const SearchBar: React.FC<SearchBarProps> = ({ query, setQuery }) => (
   <AppBar position="static">
     <Toolbar>
       <Typography
@@ -65,7 +70,9 @@ const SearchBar = ({ query, setQuery }) => (
           placeholder="Search…"
           inputProps={{ "aria-label": "search" }}
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            setQuery(e.target.value)
+          }
         />
       </Search>
     </Toolbar>

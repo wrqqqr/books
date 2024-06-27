@@ -1,58 +1,75 @@
 "use client";
 
 import React, { useState, useCallback, useEffect } from "react";
-import axios from "axios";
 import debounce from "lodash.debounce";
-import { Container } from "@mui/material";
+import { Container, Box, Grid, Skeleton } from "@mui/material";
 import SearchBar from "./ui/SearchBar/SearchBar";
 import BooksGrid from "./ui/BooksGrid/BooksGrid";
 import PaginationControls from "./ui/PaginationControls/PaginationControls";
+import useFetchBooks from "@/app/lib/hooks/useFetchBooks";
 
-const HomePage = () => {
-  const [query, setQuery] = useState("Lovecraft");
-  const [books, setBooks] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+const ITEMS_PER_PAGE = 4;
 
-  const fetchBooks = useCallback(async (query, startIndex = 0) => {
-    if (query.length === 0) {
-      setBooks([]);
-      return;
-    }
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY;
-    let response = null;
-    try {
-      response = await axios.get(
-        `https://www.googleapis.com/books/v1/volumes?q=${query}&startIndex=${startIndex}&maxResults=6&key=${apiKey}`,
-      );
-    } catch (error) {
-      console.error("Ошибка при запросе книг:", error);
-    }
-    setBooks(response?.data.items || []);
-    setTotalPages(Math.ceil(response?.data.totalItems / 6)); // Изменено деление на 6 вместо 12
-  }, []);
+const HomePage: React.FC = () => {
+  const [query, setQuery] = useState<string>("Lovecraft");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const { books, loading, totalItems, fetchBooks } = useFetchBooks();
 
   const debouncedFetchBooks = useCallback(
-    debounce((q, startIndex) => fetchBooks(q, startIndex), 500), // Изменено для принятия второго аргумента
+    debounce(
+      (q: string, startIndex: number) =>
+        fetchBooks(q, startIndex, ITEMS_PER_PAGE),
+      500,
+    ),
     [fetchBooks],
   );
 
   useEffect(() => {
-    debouncedFetchBooks(query, 1);
-  }, [query, debouncedFetchBooks]);
+    if (currentPage === 1) {
+      debouncedFetchBooks(query, 0);
+    } else {
+      const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+      debouncedFetchBooks(query, startIndex);
+    }
+  }, [query, currentPage, debouncedFetchBooks]);
 
-  const handlePageChange = (event, value) => {
+  const handlePageChange = (
+    event: React.ChangeEvent<unknown>,
+    value: number,
+  ) => {
+    console.log(value);
     setCurrentPage(value);
-    fetchBooks(query, (value - 1) * 6);
   };
+
+  const skeletonItems = Array.from(new Array(3)).map((_, index) => (
+    <Grid item xs={12} sm={6} md={4} key={index}>
+      <Skeleton variant="rectangular" height={200} />
+      <Skeleton height={40} />
+      <Skeleton height={30} />
+      <Skeleton height={20} />
+    </Grid>
+  ));
 
   return (
     <Container>
       <SearchBar query={query} setQuery={setQuery} />
-      <BooksGrid books={books || []} />{" "}
-      {/* Убедитесь, что books всегда массив */}
+      {loading ? (
+        <Box
+          display="flex"
+          flexWrap="wrap"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="50vh"
+        >
+          <Grid container spacing={3}>
+            {skeletonItems}
+          </Grid>
+        </Box>
+      ) : (
+        <BooksGrid books={books} />
+      )}
       <PaginationControls
-        totalPages={totalPages}
+        totalPages={Math.ceil(totalItems / ITEMS_PER_PAGE)}
         currentPage={currentPage}
         handlePageChange={handlePageChange}
       />
