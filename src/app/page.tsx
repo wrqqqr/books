@@ -1,44 +1,25 @@
 "use client";
 
 import React, { useState, useCallback, useEffect } from "react";
+import { observer } from "mobx-react-lite";
 import debounce from "lodash.debounce";
 import { Container, Box, Grid, Skeleton } from "@mui/material";
 import SearchBar from "./ui/SearchBar/SearchBar";
 import BooksGrid from "./ui/BooksGrid/BooksGrid";
 import PaginationControls from "./ui/PaginationControls/PaginationControls";
-import useFetchBooks from "@/app/lib/hooks/useFetchBooks";
+import bookStore from "@/app/stores/BookStore";
+import GenreSelect from "@/app/ui/GenreSelect/GenreSelect";
 
-const ITEMS_PER_PAGE = 4;
-
-const HomePage: React.FC = () => {
-  const [query, setQuery] = useState<string>("Lovecraft");
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const { books, loading, totalItems, fetchBooks } = useFetchBooks();
-
-  const debouncedFetchBooks = useCallback(
-    debounce(
-      (q: string, startIndex: number) =>
-        fetchBooks(q, startIndex, ITEMS_PER_PAGE),
-      500,
-    ),
-    [fetchBooks],
-  );
-
+const HomePage: React.FC = observer(() => {
   useEffect(() => {
-    if (currentPage === 1) {
-      debouncedFetchBooks(query, 0);
-    } else {
-      const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-      debouncedFetchBooks(query, startIndex);
-    }
-  }, [query, currentPage, debouncedFetchBooks]);
+    bookStore.fetchBooks();
+  }, []);
 
   const handlePageChange = (
     event: React.ChangeEvent<unknown>,
     value: number,
   ) => {
-    console.log(value);
-    setCurrentPage(value);
+    bookStore.setCurrentPage(value);
   };
 
   const skeletonItems = Array.from(new Array(3)).map((_, index) => (
@@ -52,8 +33,15 @@ const HomePage: React.FC = () => {
 
   return (
     <Container>
-      <SearchBar query={query} setQuery={setQuery} />
-      {loading ? (
+      <GenreSelect
+        selectedGenre={bookStore.selectedGenre}
+        setSelectedGenre={(genre) => bookStore.setSelectedGenre(genre)}
+      />
+      <SearchBar
+        query={bookStore.query}
+        setQuery={(query) => bookStore.setQuery(query)}
+      />
+      {bookStore.loading ? (
         <Box
           display="flex"
           flexWrap="wrap"
@@ -66,15 +54,15 @@ const HomePage: React.FC = () => {
           </Grid>
         </Box>
       ) : (
-        <BooksGrid books={books} />
+        <BooksGrid books={bookStore.books} />
       )}
       <PaginationControls
-        totalPages={Math.ceil(totalItems / ITEMS_PER_PAGE)}
-        currentPage={currentPage}
+        totalPages={bookStore.totalItems}
+        currentPage={bookStore.currentPage}
         handlePageChange={handlePageChange}
       />
     </Container>
   );
-};
+});
 
 export default HomePage;
